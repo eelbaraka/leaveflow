@@ -243,7 +243,7 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{employee.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Back on {fmtDate(parseISO(request.endDate).getTime() + 86400000 * 1, "EEE, MMM d")}
+                      Back on {fmtDate(new Date(parseISO(request.endDate).getTime() + 86400000), "EEE, MMM d")}
                     </p>
                   </div>
                   <Badge variant="outline" style={{ borderColor: type.color + "66", color: type.color }}>
