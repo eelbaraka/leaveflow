@@ -76,7 +76,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="px-8 py-8 max-w-[1440px] mx-auto">
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1440px] mx-auto">
       <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Planning</p>

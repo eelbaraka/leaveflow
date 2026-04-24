@@ -42,15 +42,13 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
     background-image:
       radial-gradient(at 10% 0%, hsla(32, 70%, 90%, 0.3) 0, transparent 50%),
       radial-gradient(at 90% 100%, hsla(85, 30%, 88%, 0.25) 0, transparent 50%);
   }
 
   h1, h2, h3, h4 {
-    @apply font-serif tracking-tight;
-    font-feature-settings: "liga" 1, "dlig" 1;
+    @apply font-serif font-semibold tracking-tight;
   }
 }
 

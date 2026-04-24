@@ -33,7 +33,7 @@ export default function TeamPage() {
   }, [query, teamFilter, roleFilter]);
 
   return (
-    <div className="px-8 py-8 max-w-[1320px] mx-auto">
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1320px] mx-auto">
       <div className="mb-8">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">People</p>
         <h1 className="font-serif text-4xl tracking-tight">Directory</h1>

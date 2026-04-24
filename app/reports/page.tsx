@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { Download, TrendingUp, Users, Calendar as CalendarIcon } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,7 +115,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="px-8 py-8 max-w-[1320px] mx-auto">
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1320px] mx-auto">
       <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Insights</p>
@@ -212,12 +214,12 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${(days / maxByType) * 100}%`,
-                      backgroundColor: type.color,
-                    }}
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(days / maxByType) * 100}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: type.color }}
                   />
                 </div>
               </div>
@@ -232,19 +234,42 @@ export default function ReportsPage() {
             <CardDescription>Where your team's time off falls</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end gap-2 h-40">
-              {byMonth.map(({ month, days }) => (
-                <div key={month} className="flex-1 flex flex-col items-center gap-1.5 group">
-                  <span className="text-[10px] font-mono text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    {days}
-                  </span>
-                  <div
-                    className="w-full bg-sage-300 hover:bg-sage-500 rounded-t transition-colors"
-                    style={{ height: `${(days / maxByMonth) * 100}%`, minHeight: days > 0 ? "4px" : "0" }}
+            <div className="h-40 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byMonth} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+                    dy={10} 
                   />
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{month}</span>
-                </div>
-              ))}
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+                  />
+                  <RechartsTooltip
+                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-card border border-border p-2 rounded-md shadow-sm">
+                            <p className="text-xs font-medium">{payload[0].payload.month}</p>
+                            <p className="text-xs text-muted-foreground">{payload[0].value} days off</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="days" radius={[4, 4, 0, 0]} activeBar={{ fill: "hsl(var(--accent))" }}>
+                    {byMonth.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.days > 0 ? "hsl(var(--primary))" : "hsl(var(--muted))"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -291,10 +316,12 @@ export default function ReportsPage() {
                       <td className="px-6 py-3 text-right">
                         <div className="flex items-center gap-2 justify-end">
                           <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                               className="h-full rounded-full"
                               style={{
-                                width: `${pct}%`,
                                 backgroundColor:
                                   pct > 80 ? "#c2433a" : pct > 50 ? "#d98618" : "#677854",
                               }}

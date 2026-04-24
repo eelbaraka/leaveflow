@@ -44,7 +44,7 @@ export default function DashboardPage() {
     myUpcoming.length > 0 ? differenceInCalendarDays(parseISO(myUpcoming[0].startDate), today) : null;
 
   return (
-    <div className="px-8 py-8 max-w-[1320px] mx-auto">
+    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1320px] mx-auto">
       {/* Hero */}
       <section className="grid grid-cols-1 lg:grid-cols-[1.4fr,1fr] gap-6 mb-10">
         <div>
