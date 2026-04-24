@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Download, TrendingUp, Users, Calendar as CalendarIcon } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
-import { motion } from "framer-motion";
+import { Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -17,7 +14,6 @@ import {
 import { employees, teams } from "@/lib/mock/employees";
 import { leaveTypes } from "@/lib/mock/leave-types";
 import { leaveRequests, balanceFor } from "@/lib/mock/leave-requests";
-import { fmtDateRange } from "@/lib/utils/dates";
 import { parseISO, format } from "date-fns";
 
 export default function ReportsPage() {
@@ -35,7 +31,6 @@ export default function ReportsPage() {
       });
   }, [teamFilter, typeFilter]);
 
-  // Breakdown by type
   const byType = useMemo(() => {
     return leaveTypes
       .map((t) => ({
@@ -50,7 +45,6 @@ export default function ReportsPage() {
   const totalDays = filtered.reduce((s, r) => s + r.days, 0);
   const maxByType = Math.max(...byType.map((x) => x.days), 1);
 
-  // Per employee
   const byEmployee = useMemo(() => {
     return employees
       .map((emp) => {
@@ -73,7 +67,6 @@ export default function ReportsPage() {
       .sort((a, b) => b.used - a.used);
   }, [teamFilter]);
 
-  // Monthly distribution
   const byMonth = useMemo(() => {
     const map = new Map<string, number>();
     filtered.forEach((r) => {
@@ -115,16 +108,17 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1320px] mx-auto">
-      <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 lg:mb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Insights</p>
-          <h1 className="font-serif text-4xl tracking-tight">Reports</h1>
-          <p className="text-muted-foreground mt-1">Export-ready summaries for HR, payroll and planning.</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Reports</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Export-ready summaries for HR and payroll
+          </p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2">
           <Select value={teamFilter} onValueChange={setTeamFilter}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[140px] h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -137,7 +131,7 @@ export default function ReportsPage() {
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[140px] h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -149,77 +143,60 @@ export default function ReportsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={exportCSV} variant="accent">
-            <Download className="h-4 w-4" /> Export CSV
+          <Button onClick={exportCSV} variant="outline" className="shrink-0">
+            <Download /> <span className="hidden sm:inline">CSV</span>
           </Button>
         </div>
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Total days used</span>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="font-serif text-4xl">{totalDays}</p>
-          <p className="text-xs text-muted-foreground mt-1">across {filtered.length} requests</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5 lg:mb-6">
+        <Card className="p-4">
+          <div className="text-[11px] text-muted-foreground font-medium mb-1">Total days</div>
+          <div className="text-xl sm:text-2xl font-semibold tabular-nums">{totalDays}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">{filtered.length} requests</div>
         </Card>
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Avg per person</span>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="font-serif text-4xl">
+        <Card className="p-4">
+          <div className="text-[11px] text-muted-foreground font-medium mb-1">Avg per person</div>
+          <div className="text-xl sm:text-2xl font-semibold tabular-nums">
             {(totalDays / Math.max(1, byEmployee.length)).toFixed(1)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">days year-to-date</p>
-        </Card>
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Highest type</span>
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className="font-serif text-2xl truncate">{byType[0]?.type.name || "—"}</p>
-          <p className="text-xs text-muted-foreground mt-1">{byType[0]?.days || 0} days</p>
+          <div className="text-[11px] text-muted-foreground mt-0.5">YTD</div>
         </Card>
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Active employees</span>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="font-serif text-4xl">{byEmployee.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">tracked this year</p>
+        <Card className="p-4">
+          <div className="text-[11px] text-muted-foreground font-medium mb-1">Top type</div>
+          <div className="text-base sm:text-lg font-semibold truncate">{byType[0]?.type.name || "—"}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">{byType[0]?.days || 0} days</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-[11px] text-muted-foreground font-medium mb-1">People</div>
+          <div className="text-xl sm:text-2xl font-semibold tabular-nums">{byEmployee.length}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">tracked</div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Breakdown by type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-5 lg:mb-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-5 pb-3">
             <CardTitle>Days by leave type</CardTitle>
-            <CardDescription>Approved time off, year-to-date</CardDescription>
+            <CardDescription className="text-xs">Approved time off, year-to-date</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="p-4 sm:p-5 pt-0 space-y-2.5">
             {byType.map(({ type, days, count }) => (
               <div key={type.id}>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: type.color }} />
-                    {type.name}
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: type.color }} />
+                    <span className="font-medium">{type.name}</span>
                   </span>
-                  <span className="font-mono text-xs">
-                    <span className="text-foreground">{days}d</span>{" "}
-                    <span className="text-muted-foreground">· {count} req.</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    <span className="text-foreground font-medium">{days}d</span> · {count}
                   </span>
                 </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(days / maxByType) * 100}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: type.color }}
+                <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${(days / maxByType) * 100}%`, backgroundColor: type.color }}
                   />
                 </div>
               </div>
@@ -227,107 +204,85 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Monthly distribution */}
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-5 pb-3">
             <CardTitle>Monthly distribution</CardTitle>
-            <CardDescription>Where your team's time off falls</CardDescription>
+            <CardDescription className="text-xs">Where your team's time off falls</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-40 mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={byMonth} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <XAxis 
-                    dataKey="month" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-                    dy={10} 
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-                  />
-                  <RechartsTooltip
-                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-card border border-border p-2 rounded-md shadow-sm">
-                            <p className="text-xs font-medium">{payload[0].payload.month}</p>
-                            <p className="text-xs text-muted-foreground">{payload[0].value} days off</p>
-                          </div>
-                        );
-                      }
-                      return null;
+          <CardContent className="p-4 sm:p-5 pt-0">
+            <div className="flex items-end gap-1 h-32">
+              {byMonth.map(({ month, days }) => (
+                <div key={month} className="flex-1 flex flex-col items-center gap-1 group">
+                  <span className="text-[9px] text-muted-foreground opacity-0 group-hover:opacity-100 tabular-nums">
+                    {days}
+                  </span>
+                  <div
+                    className="w-full bg-foreground/80 hover:bg-foreground rounded-sm transition-colors"
+                    style={{
+                      height: `${(days / maxByMonth) * 100}%`,
+                      minHeight: days > 0 ? "2px" : "0",
                     }}
                   />
-                  <Bar dataKey="days" radius={[4, 4, 0, 0]} activeBar={{ fill: "hsl(var(--accent))" }}>
-                    {byMonth.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.days > 0 ? "hsl(var(--primary))" : "hsl(var(--muted))"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                  <span className="text-[9px] text-muted-foreground">{month}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Per-employee table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-5 pb-3">
           <CardTitle>Per-employee breakdown</CardTitle>
-          <CardDescription>Usage, remaining balance and coverage</CardDescription>
+          <CardDescription className="text-xs">Usage and remaining balance</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-t border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="text-left font-medium px-6 py-2.5">Employee</th>
-                  <th className="text-left font-medium px-3 py-2.5">Team</th>
-                  <th className="text-right font-medium px-3 py-2.5">Used</th>
-                  <th className="text-right font-medium px-3 py-2.5">Pending</th>
-                  <th className="text-right font-medium px-3 py-2.5">Remaining</th>
-                  <th className="text-right font-medium px-6 py-2.5">Utilisation</th>
+                <tr className="border-y text-xs text-muted-foreground">
+                  <th className="text-left font-medium px-4 sm:px-6 py-2">Employee</th>
+                  <th className="text-left font-medium px-3 py-2 hidden sm:table-cell">Team</th>
+                  <th className="text-right font-medium px-3 py-2 tabular-nums">Used</th>
+                  <th className="text-right font-medium px-3 py-2 tabular-nums hidden sm:table-cell">Pending</th>
+                  <th className="text-right font-medium px-3 py-2 tabular-nums">Left</th>
+                  <th className="text-right font-medium px-4 sm:px-6 py-2 hidden md:table-cell">Usage</th>
                 </tr>
               </thead>
               <tbody>
                 {byEmployee.map(({ emp, used, pending, remaining, allowance }) => {
                   const pct = (used / allowance) * 100;
                   return (
-                    <tr key={emp.id} className="border-b border-border hover:bg-muted/30">
-                      <td className="px-6 py-3">
+                    <tr key={emp.id} className="border-b hover:bg-secondary/30">
+                      <td className="px-4 sm:px-6 py-3">
                         <div>
-                          <p className="font-medium">{emp.name}</p>
-                          <p className="text-xs text-muted-foreground">{emp.jobTitle}</p>
+                          <p className="font-medium truncate">{emp.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{emp.jobTitle}</p>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-muted-foreground">{emp.team}</td>
-                      <td className="px-3 py-3 text-right font-mono">{used}</td>
-                      <td className="px-3 py-3 text-right font-mono text-muted-foreground">
+                      <td className="px-3 py-3 text-muted-foreground hidden sm:table-cell">{emp.team}</td>
+                      <td className="px-3 py-3 text-right tabular-nums">{used}</td>
+                      <td className="px-3 py-3 text-right tabular-nums text-muted-foreground hidden sm:table-cell">
                         {pending || "—"}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono">
-                        <span className={remaining < 5 ? "text-destructive" : ""}>{remaining}</span>
+                      <td className="px-3 py-3 text-right tabular-nums">
+                        <span className={remaining < 5 ? "text-destructive font-medium" : ""}>{remaining}</span>
                       </td>
-                      <td className="px-6 py-3 text-right">
+                      <td className="px-4 sm:px-6 py-3 hidden md:table-cell">
                         <div className="flex items-center gap-2 justify-end">
-                          <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${pct}%` }}
-                              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                          <div className="w-20 h-1.5 rounded-full bg-secondary overflow-hidden">
+                            <div
                               className="h-full rounded-full"
                               style={{
+                                width: `${pct}%`,
                                 backgroundColor:
-                                  pct > 80 ? "#c2433a" : pct > 50 ? "#d98618" : "#677854",
+                                  pct > 80 ? "hsl(var(--destructive))" : pct > 50 ? "#f59e0b" : "#10b981",
                               }}
                             />
                           </div>
-                          <span className="font-mono text-xs w-10 text-right">{pct.toFixed(0)}%</span>
+                          <span className="text-xs tabular-nums w-9 text-right text-muted-foreground">
+                            {pct.toFixed(0)}%
+                          </span>
                         </div>
                       </td>
                     </tr>

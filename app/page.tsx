@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Plus, Check, X, CalendarClock, TreePalm, Activity } from "lucide-react";
+import {
+  ArrowRight,
+  Plus,
+  Check,
+  X,
+  CalendarClock,
+  TreePalm,
+  Users,
+  TrendingUp,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { employees, CURRENT_USER_ID } from "@/lib/mock/employees";
 import { leaveTypes } from "@/lib/mock/leave-types";
@@ -20,17 +28,14 @@ export default function DashboardPage() {
   const me = employees.find((e) => e.id === CURRENT_USER_ID)!;
   const today = new Date();
 
-  // My upcoming approved leave
   const myUpcoming = leaveRequests
     .filter((r) => r.employeeId === me.id && r.status === "approved" && isAfter(parseISO(r.endDate), today))
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
-  // Pending approvals assigned to me
   const pendingForMe = leaveRequests.filter(
     (r) => r.status === "pending" && r.approverId === me.id
   );
 
-  // Team on leave right now (anyone whose approved range covers today)
   const onLeaveToday = leaveRequests
     .filter(
       (r) =>
@@ -43,215 +48,223 @@ export default function DashboardPage() {
   const nextHolidayDays =
     myUpcoming.length > 0 ? differenceInCalendarDays(parseISO(myUpcoming[0].startDate), today) : null;
 
-  return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1320px] mx-auto">
-      {/* Hero */}
-      <section className="grid grid-cols-1 lg:grid-cols-[1.4fr,1fr] gap-6 mb-10">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
-            {fmtDate(today, "EEEE · MMMM d, yyyy")}
-          </p>
-          <h1 className="font-serif text-5xl leading-[0.95] tracking-tight mb-3">
-            Good morning, <span className="italic text-muted-foreground">{me.name.split(" ")[0]}.</span>
-          </h1>
-          <p className="text-muted-foreground max-w-md leading-relaxed">
-            {nextHolidayDays !== null
-              ? `Your next break begins in ${nextHolidayDays} days — ${fmtDateRange(myUpcoming[0].startDate, myUpcoming[0].endDate)}.`
-              : "No time off scheduled. When did you last take a real break?"}
-          </p>
-          <div className="flex gap-3 mt-6">
-            <Button onClick={() => setOpenRequest(true)} size="lg" className="group">
-              <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
-              Request leave
-            </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link href="/calendar">
-                See team calendar
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
+  const myUsedYTD = leaveRequests
+    .filter((r) => r.employeeId === me.id && r.status === "approved")
+    .reduce((s, r) => s + r.days, 0);
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <QuickStat
-            icon={<TreePalm className="h-4 w-4" />}
-            label="Days off this year"
-            value={leaveRequests
-              .filter((r) => r.employeeId === me.id && r.status === "approved")
-              .reduce((s, r) => s + r.days, 0)
-              .toString()}
-            sub="used so far"
-          />
-          <QuickStat
-            icon={<CalendarClock className="h-4 w-4" />}
-            label="Awaiting your nod"
-            value={pendingForMe.length.toString()}
-            sub={`${pendingForMe.length === 1 ? "request" : "requests"} pending`}
-            accent={pendingForMe.length > 0}
-          />
-          <QuickStat
-            icon={<Activity className="h-4 w-4" />}
-            label="Out of office"
-            value={onLeaveToday.length.toString()}
-            sub="today"
-          />
-          <QuickStat
-            icon={<TreePalm className="h-4 w-4" />}
-            label="Next holiday"
-            value={nextHolidayDays !== null ? `${nextHolidayDays}d` : "—"}
-            sub={myUpcoming[0] ? fmtDate(myUpcoming[0].startDate, "MMM d") : "none scheduled"}
-          />
+  return (
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 lg:mb-8">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
+            Welcome back, {me.name.split(" ")[0]}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {nextHolidayDays !== null
+              ? `Next break in ${nextHolidayDays} days — ${fmtDateRange(myUpcoming[0].startDate, myUpcoming[0].endDate)}`
+              : "No time off scheduled"}
+          </p>
         </div>
-      </section>
+        <Button onClick={() => setOpenRequest(true)} className="sm:w-auto w-full">
+          <Plus /> Request leave
+        </Button>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 lg:mb-8">
+        <Stat
+          icon={<TreePalm className="h-4 w-4" />}
+          label="Used this year"
+          value={myUsedYTD}
+          unit="days"
+        />
+        <Stat
+          icon={<CalendarClock className="h-4 w-4" />}
+          label="Pending review"
+          value={pendingForMe.length}
+          unit={pendingForMe.length === 1 ? "request" : "requests"}
+          highlight={pendingForMe.length > 0}
+        />
+        <Stat
+          icon={<Users className="h-4 w-4" />}
+          label="Out today"
+          value={onLeaveToday.length}
+          unit="people"
+        />
+        <Stat
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Next holiday"
+          value={nextHolidayDays ?? "—"}
+          unit={nextHolidayDays !== null ? "days away" : ""}
+        />
+      </div>
 
       {/* Balances */}
-      <section className="mb-10">
-        <div className="flex items-end justify-between mb-4">
-          <div>
-            <h2 className="font-serif text-2xl">Your allowances</h2>
-            <p className="text-sm text-muted-foreground">Tracked automatically against company policy</p>
-          </div>
-          <Link href="/settings" className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground">
-            Policies →
+      <div className="mb-6 lg:mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold">Your balances</h2>
+          <Link
+            href="/settings"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            View policies
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {leaveTypes
             .filter((t) => ["lt1", "lt2", "lt3", "lt5"].includes(t.id))
             .map((t) => {
               const b = balanceFor(me.id, t.id)!;
               const remaining = b.allowance - b.used - b.pending;
-              const pct = (b.used / b.allowance) * 100;
+              const pct = Math.max(0, Math.min(100, (b.used / b.allowance) * 100));
               return (
-                <div
-                  key={t.id}
-                  className="rounded-lg border border-border bg-card p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
+                <Card key={t.id} className="p-4 hover:border-ring/20 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span
-                        className="w-2.5 h-2.5 rounded-full"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: t.color }}
                       />
-                      <span className="text-sm font-medium">{t.name}</span>
+                      <span className="text-xs font-medium truncate">{t.name}</span>
                     </div>
-                    <span className="font-mono text-[10px] text-muted-foreground uppercase">{t.code}</span>
-                  </div>
-                  <div className="flex items-baseline gap-1 mb-3">
-                    <span className="font-serif text-4xl tracking-tight">{remaining}</span>
-                    <span className="text-sm text-muted-foreground">/ {b.allowance} days</span>
-                  </div>
-                  <Progress value={pct} indicatorColor={t.color} className="mb-3" />
-                  <div className="flex gap-4 text-xs">
-                    <span className="text-muted-foreground">
-                      Used <span className="text-foreground font-medium">{b.used}</span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+                      {t.code}
                     </span>
+                  </div>
+                  <div className="flex items-baseline gap-1 mb-2.5">
+                    <span className="text-2xl font-semibold tabular-nums">{remaining}</span>
+                    <span className="text-xs text-muted-foreground">/ {b.allowance} days</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full transition-all"
+                      style={{ width: `${pct}%`, backgroundColor: t.color }}
+                    />
+                  </div>
+                  <div className="flex gap-3 text-[11px] mt-2 text-muted-foreground tabular-nums">
+                    <span>Used <span className="text-foreground font-medium">{b.used}</span></span>
                     {b.pending > 0 && (
-                      <span className="text-muted-foreground">
+                      <span>
                         Pending <span className="text-foreground font-medium">{b.pending}</span>
                       </span>
                     )}
                   </div>
-                </div>
+                </Card>
               );
             })}
         </div>
-      </section>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-        {/* Pending approvals for managers */}
+      {/* Two-column panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-5">
             <div>
-              <CardTitle>Awaiting your review</CardTitle>
-              <CardDescription>
-                {pendingForMe.length} pending {pendingForMe.length === 1 ? "request" : "requests"}
+              <CardTitle>Pending approvals</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                {pendingForMe.length === 0 ? "No requests waiting" : `${pendingForMe.length} awaiting your review`}
               </CardDescription>
             </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/requests">All requests →</Link>
+            <Button variant="ghost" size="sm" asChild className="shrink-0">
+              <Link href="/requests">
+                View all <ArrowRight />
+              </Link>
             </Button>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {pendingForMe.length === 0 && (
-              <div className="text-center py-8 text-sm text-muted-foreground italic font-serif">
-                All clear. Your inbox is quiet.
+          <CardContent className="p-2 sm:p-3 pt-0 sm:pt-0">
+            {pendingForMe.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                All caught up
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {pendingForMe.slice(0, 4).map((r) => {
+                  const emp = employees.find((e) => e.id === r.employeeId)!;
+                  const type = leaveTypes.find((t) => t.id === r.typeId)!;
+                  const initials = emp.name.split(" ").map((s) => s[0]).slice(0, 2).join("");
+                  return (
+                    <div
+                      key={r.id}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary/50 transition-colors"
+                    >
+                      <Avatar className="h-8 w-8 shrink-0">
+                        <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{emp.name}</p>
+                        <p className="text-xs text-muted-foreground truncate tabular-nums">
+                          <span
+                            className="inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle"
+                            style={{ backgroundColor: type.color }}
+                          />
+                          {fmtDateRange(r.startDate, r.endDate)} · {r.days}d
+                        </p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 hover:bg-emerald-50 hover:text-emerald-700"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            {pendingForMe.slice(0, 4).map((r) => {
-              const emp = employees.find((e) => e.id === r.employeeId)!;
-              const type = leaveTypes.find((t) => t.id === r.typeId)!;
-              const initials = emp.name.split(" ").map((s) => s[0]).slice(0, 2).join("");
-              return (
-                <div
-                  key={r.id}
-                  className="flex items-center gap-3 p-3 rounded-md hover:bg-muted/60 transition-colors group"
-                >
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">{emp.name}</p>
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: type.color }}
-                      />
-                      <span className="text-xs text-muted-foreground">{type.code}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {fmtDateRange(r.startDate, r.endDate)} · {r.days}d
-                    </p>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive">
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-sage-700">
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
           </CardContent>
         </Card>
 
-        {/* Out of office today */}
         <Card>
-          <CardHeader>
-            <CardTitle>Out of office today</CardTitle>
-            <CardDescription>{onLeaveToday.length} people away · {fmtDate(today, "EEEE")}</CardDescription>
+          <CardHeader className="p-4 sm:p-5">
+            <CardTitle>Out today</CardTitle>
+            <CardDescription className="text-xs mt-0.5">
+              {onLeaveToday.length} {onLeaveToday.length === 1 ? "person" : "people"} away · {fmtDate(today, "EEEE, MMM d")}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {onLeaveToday.length === 0 && (
-              <div className="text-center py-8 text-sm text-muted-foreground italic font-serif">
-                Everyone's in today.
+          <CardContent className="p-2 sm:p-3 pt-0 sm:pt-0">
+            {onLeaveToday.length === 0 ? (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                Everyone is in today
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {onLeaveToday.map(({ request, employee }) => {
+                  const type = leaveTypes.find((t) => t.id === request.typeId)!;
+                  const initials = employee.name.split(" ").map((s) => s[0]).slice(0, 2).join("");
+                  const daysLeft = differenceInCalendarDays(parseISO(request.endDate), today) + 1;
+                  return (
+                    <div
+                      key={request.id}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary/50 transition-colors"
+                    >
+                      <Avatar className="h-8 w-8 shrink-0">
+                        <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{employee.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          Back {fmtDate(new Date(parseISO(request.endDate).getTime() + 86400000), "EEE, MMM d")}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0 tabular-nums text-[10px]">
+                        {daysLeft}d left
+                      </Badge>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            {onLeaveToday.map(({ request, employee }) => {
-              const type = leaveTypes.find((t) => t.id === request.typeId)!;
-              const initials = employee.name.split(" ").map((s) => s[0]).slice(0, 2).join("");
-              const daysLeft = differenceInCalendarDays(parseISO(request.endDate), today) + 1;
-              return (
-                <div key={request.id} className="flex items-center gap-3 p-3 rounded-md hover:bg-muted/60 transition-colors">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{employee.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Back on {fmtDate(new Date(parseISO(request.endDate).getTime() + 86400000), "EEE, MMM d")}
-                    </p>
-                  </div>
-                  <Badge variant="outline" style={{ borderColor: type.color + "66", color: type.color }}>
-                    {type.code} · {daysLeft}d left
-                  </Badge>
-                </div>
-              );
-            })}
           </CardContent>
         </Card>
       </div>
@@ -261,31 +274,29 @@ export default function DashboardPage() {
   );
 }
 
-function QuickStat({
+function Stat({
   icon,
   label,
   value,
-  sub,
-  accent,
+  unit,
+  highlight,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
-  sub: string;
-  accent?: boolean;
+  value: number | string;
+  unit: string;
+  highlight?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-lg border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${
-        accent ? "border-accent/40 bg-accent/5" : "border-border bg-card"
-      }`}
-    >
+    <Card className="p-4 hover:border-ring/20 transition-colors">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-        <span className={accent ? "text-[hsl(var(--accent))]" : "text-muted-foreground"}>{icon}</span>
+        <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
+        <span className={highlight ? "text-destructive" : "text-muted-foreground"}>{icon}</span>
       </div>
-      <div className="font-serif text-3xl leading-none">{value}</div>
-      <div className="text-xs text-muted-foreground mt-1">{sub}</div>
-    </div>
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tabular-nums leading-none">{value}</span>
+        {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
+      </div>
+    </Card>
   );
 }

@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Leaveflow — calm leave management for calm teams",
-  description: "A considered take on leave, PTO and absence tracking. Built for small and medium teams.",
+  title: "Leaveflow — Leave management for modern teams",
+  description: "Request, approve, and track time off. Designed for small and medium teams.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={dmSans.variable}>
-      <body>
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans min-h-screen">
         <AppShell>{children}</AppShell>
       </body>
     </html>

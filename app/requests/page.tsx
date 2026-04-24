@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Check, X, Clock, Filter, Plus } from "lucide-react";
+import { useState } from "react";
+import { Check, X, Clock, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,6 @@ import { RequestLeaveDialog } from "@/components/request-leave-dialog";
 export default function RequestsPage() {
   const me = employees.find((e) => e.id === CURRENT_USER_ID)!;
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [decisions, setDecisions] = useState<Record<string, LeaveStatus>>({});
   const [openRequest, setOpenRequest] = useState(false);
 
@@ -35,71 +34,50 @@ export default function RequestsPage() {
   const all = leaveRequests;
 
   const filter = (list: LeaveRequest[]) =>
-    list.filter((r) => {
-      if (typeFilter !== "all" && r.typeId !== typeFilter) return false;
-      const effectiveStatus = decisions[r.id] || r.status;
-      if (statusFilter !== "all" && effectiveStatus !== statusFilter) return false;
-      return true;
-    });
+    list.filter((r) => typeFilter === "all" || r.typeId === typeFilter);
 
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1320px] mx-auto">
-      <div className="flex items-end justify-between mb-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 lg:mb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
-            Inbox
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Leave requests</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Review, approve, and track time off
           </p>
-          <h1 className="font-serif text-4xl tracking-tight">Leave requests</h1>
-          <p className="text-muted-foreground mt-1">Review, approve, and track time off — yours and your team's.</p>
         </div>
-        <Button onClick={() => setOpenRequest(true)}>
-          <Plus className="h-4 w-4" /> New request
+        <Button onClick={() => setOpenRequest(true)} className="sm:w-auto w-full">
+          <Plus /> New request
         </Button>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Filter className="h-3.5 w-3.5" /> Filter
-        </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            {leaveTypes.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <Tabs defaultValue="pending">
-        <TabsList>
-          <TabsTrigger value="pending">
-            Pending approval
-            {pendingForMe.length > 0 && (
-              <span className="ml-2 text-[10px] bg-accent/15 text-[hsl(var(--accent))] rounded-full px-1.5 py-0.5">
-                {pendingForMe.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="mine">My requests ({myRequests.length})</TabsTrigger>
-          <TabsTrigger value="all">All requests</TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="pending" className="flex-1 sm:flex-none">
+              Pending
+              {pendingForMe.length > 0 && (
+                <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-foreground text-background tabular-nums">
+                  {pendingForMe.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="mine" className="flex-1 sm:flex-none">Mine</TabsTrigger>
+            <TabsTrigger value="all" className="flex-1 sm:flex-none">All</TabsTrigger>
+          </TabsList>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[160px] h-9">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {leaveTypes.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <TabsContent value="pending">
           <RequestList
@@ -135,8 +113,7 @@ function RequestList({
   if (requests.length === 0) {
     return (
       <Card className="p-12 text-center">
-        <p className="font-serif text-xl italic text-muted-foreground">Nothing here.</p>
-        <p className="text-sm text-muted-foreground mt-1">Try changing your filters.</p>
+        <p className="text-sm text-muted-foreground">No requests match your filters</p>
       </Card>
     );
   }
@@ -168,18 +145,17 @@ function RequestRow({
 }) {
   const emp = employees.find((e) => e.id === request.employeeId)!;
   const type = leaveTypes.find((t) => t.id === request.typeId)!;
-  const approver = employees.find((e) => e.id === request.approverId);
   const effectiveStatus = decision || request.status;
   const initials = emp.name.split(" ").map((s) => s[0]).slice(0, 2).join("");
 
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback>{initials}</AvatarFallback>
+    <Card className="p-3 sm:p-4 hover:border-ring/20 transition-colors">
+      <div className="flex items-start sm:items-center gap-3">
+        <Avatar className="h-9 w-9 shrink-0">
+          <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
         </Avatar>
 
-        <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-[1.5fr,1.5fr,1fr,auto] gap-3 items-center">
+        <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-[1.5fr,1.5fr,auto] gap-2 sm:gap-4 sm:items-center">
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{emp.name}</p>
             <p className="text-xs text-muted-foreground truncate">
@@ -187,70 +163,58 @@ function RequestRow({
             </p>
           </div>
 
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: type.color }} />
-              <span className="text-sm">{fmtDateRange(request.startDate, request.endDate)}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-sm">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: type.color }} />
+              <span className="truncate tabular-nums">{fmtDateRange(request.startDate, request.endDate)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {request.days} day{request.days > 1 ? "s" : ""} · {type.name}
+            <p className="text-xs text-muted-foreground truncate tabular-nums mt-0.5">
+              {request.days}d · {type.name} · {fmtDate(request.requestedAt, "MMM d")}
             </p>
           </div>
 
-          <div>
-            <p className="text-xs text-muted-foreground truncate italic">
-              {request.reason || "—"}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">
-              Requested {fmtDate(request.requestedAt, "MMM d")}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-2 justify-between sm:justify-end">
             <StatusBadge status={effectiveStatus} />
             {actions && effectiveStatus === "pending" && onDecision && (
-              <div className="flex gap-1 ml-2">
+              <div className="flex gap-1">
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-8 w-8 hover:border-destructive hover:text-destructive"
+                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
                   onClick={() => onDecision(request.id, "rejected")}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-8 w-8 hover:border-sage-500 hover:text-sage-700 hover:bg-sage-50"
+                  className="h-8 w-8 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300"
                   onClick={() => onDecision(request.id, "approved")}
                 >
-                  <Check className="h-4 w-4" />
+                  <Check className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {request.note && (
-        <div className="mt-3 ml-14 pl-4 border-l-2 border-border text-xs text-muted-foreground italic">
-          {approver?.name}: "{request.note}"
-        </div>
+      {request.reason && (
+        <p className="text-xs text-muted-foreground mt-2 pl-12 italic">"{request.reason}"</p>
       )}
     </Card>
   );
 }
 
 function StatusBadge({ status }: { status: LeaveStatus }) {
-  const map: Record<LeaveStatus, { label: string; variant: any; icon?: React.ReactNode }> = {
+  const map: Record<LeaveStatus, { label: string; variant: "warning" | "success" | "destructive" | "secondary"; icon?: React.ReactNode }> = {
     pending: { label: "Pending", variant: "warning", icon: <Clock className="h-2.5 w-2.5" /> },
     approved: { label: "Approved", variant: "success", icon: <Check className="h-2.5 w-2.5" /> },
     rejected: { label: "Rejected", variant: "destructive", icon: <X className="h-2.5 w-2.5" /> },
-    cancelled: { label: "Cancelled", variant: "muted" },
+    cancelled: { label: "Cancelled", variant: "secondary" },
   };
   const s = map[status];
   return (
-    <Badge variant={s.variant}>
+    <Badge variant={s.variant} className="shrink-0">
       {s.icon}
       {s.label}
     </Badge>

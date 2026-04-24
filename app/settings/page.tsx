@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Edit3, Globe2, Building2, Users, Palette } from "lucide-react";
+import { Plus, Edit3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,70 +13,61 @@ import { countries } from "@/lib/mock/holidays";
 
 export default function SettingsPage() {
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 max-w-[1100px] mx-auto">
-      <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Configuration</p>
-        <h1 className="font-serif text-4xl tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">Leave policies, company details, integrations.</p>
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-5xl mx-auto">
+      <div className="mb-5 lg:mb-6">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Leave policies, company details, integrations
+        </p>
       </div>
 
       <Tabs defaultValue="types">
-        <TabsList>
+        <TabsList className="w-full sm:w-auto overflow-x-auto">
           <TabsTrigger value="types">Leave types</TabsTrigger>
           <TabsTrigger value="policies">Policies</TabsTrigger>
           <TabsTrigger value="company">Company</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="types">
+        <TabsContent value="types" className="mt-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-5">
               <div>
                 <CardTitle>Leave types</CardTitle>
-                <CardDescription>
-                  {leaveTypes.length} types configured. Customize names, colors, and default allowances.
+                <CardDescription className="text-xs mt-0.5">
+                  {leaveTypes.length} types configured
                 </CardDescription>
               </div>
-              <Button variant="accent">
-                <Plus className="h-4 w-4" /> New type
+              <Button size="sm">
+                <Plus /> Add type
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-border">
+              <div className="divide-y">
                 {leaveTypes.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/30 transition-colors"
+                    className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-secondary/30 transition-colors"
                   >
                     <div
-                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: t.color + "22" }}
+                      className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: t.color + "15" }}
                     >
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: t.color }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{t.name}</p>
-                        <span className="font-mono text-[10px] text-muted-foreground uppercase">
-                          {t.code}
-                        </span>
-                        {!t.paid && (
-                          <Badge variant="muted" className="text-[10px]">
-                            Unpaid
-                          </Badge>
-                        )}
-                        {!t.requiresApproval && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            Auto-approve
-                          </Badge>
-                        )}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium">{t.name}</p>
+                        <span className="text-[10px] text-muted-foreground font-mono">{t.code}</span>
+                        {!t.paid && <Badge variant="secondary" className="text-[9px]">Unpaid</Badge>}
+                        {!t.requiresApproval && <Badge variant="outline" className="text-[9px]">Auto</Badge>}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {t.defaultAllowanceDays} days/year · accrues {t.accrualPerMonth.toFixed(2)}/month
+                      <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+                        {t.defaultAllowanceDays} days/year · accrues {t.accrualPerMonth.toFixed(2)}/mo
                       </p>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <Edit3 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                      <Edit3 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 ))}
@@ -86,49 +76,25 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="policies">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <PolicyCard
-              title="Working week"
-              value="Monday – Friday"
-              description="Weekend days are not counted toward leave balances."
-            />
-            <PolicyCard
-              title="Year rollover"
-              value="Up to 5 days"
-              description="Unused PTO up to 5 days carries to next year."
-            />
-            <PolicyCard
-              title="Approval chain"
-              value="Direct manager"
-              description="Requests route to the employee's line manager."
-            />
-            <PolicyCard
-              title="Conflict threshold"
-              value="3 per team"
-              description="Calendar flags coverage risk when 3+ are away."
-            />
-            <PolicyCard
-              title="Notice period"
-              value="14 days"
-              description="PTO requires 2 weeks advance notice; sick leave does not."
-            />
-            <PolicyCard
-              title="Minimum tenure"
-              value="90 days"
-              description="New employees can't take paid leave before probation ends."
-            />
+        <TabsContent value="policies" className="mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <PolicyCard title="Working week" value="Monday – Friday" description="Weekends not counted toward balances" />
+            <PolicyCard title="Year rollover" value="Up to 5 days" description="Unused PTO carries to next year" />
+            <PolicyCard title="Approval chain" value="Direct manager" description="Requests route to line manager" />
+            <PolicyCard title="Conflict threshold" value="3 per team" description="Calendar flags 3+ simultaneous leave" />
+            <PolicyCard title="Notice period" value="14 days" description="PTO requires 2 weeks advance notice" />
+            <PolicyCard title="Minimum tenure" value="90 days" description="No paid leave during probation" />
           </div>
         </TabsContent>
 
-        <TabsContent value="company">
+        <TabsContent value="company" className="mt-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-5">
               <CardTitle>Company profile</CardTitle>
-              <CardDescription>Basic details shown on exports and invites</CardDescription>
+              <CardDescription className="text-xs">Shown on exports and invites</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="p-4 sm:p-5 pt-0 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1.5">
                   <Label>Company name</Label>
                   <Input defaultValue="Leaveflow Inc." />
@@ -147,50 +113,44 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border grid grid-cols-3 gap-4">
+              <div className="pt-4 border-t grid grid-cols-3 gap-4">
                 <div>
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                    <Users className="h-3.5 w-3.5" /> Teams
-                  </div>
-                  <p className="font-serif text-2xl">{teams.length}</p>
+                  <div className="text-[11px] text-muted-foreground mb-1">Teams</div>
+                  <p className="text-xl font-semibold tabular-nums">{teams.length}</p>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                    <Globe2 className="h-3.5 w-3.5" /> Countries
-                  </div>
-                  <p className="font-serif text-2xl">{countries.length}</p>
+                  <div className="text-[11px] text-muted-foreground mb-1">Countries</div>
+                  <p className="text-xl font-semibold tabular-nums">{countries.length}</p>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                    <Palette className="h-3.5 w-3.5" /> Leave types
-                  </div>
-                  <p className="font-serif text-2xl">{leaveTypes.length}</p>
+                  <div className="text-[11px] text-muted-foreground mb-1">Leave types</div>
+                  <p className="text-xl font-semibold tabular-nums">{leaveTypes.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="integrations">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="integrations" className="mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {[
-              { name: "Slack", desc: "Request and approve leave from Slack", status: "Connect" },
-              { name: "Google Calendar", desc: "Sync approved leave to calendar", status: "Connect" },
-              { name: "Outlook", desc: "Two-way Outlook calendar sync", status: "Connect" },
-              { name: "Payroll (Gusto)", desc: "Export leave data to payroll", status: "Connect" },
-              { name: "SSO (Google)", desc: "Single sign-on for your team", status: "Connect" },
-              { name: "Zapier", desc: "3,000+ app integrations", status: "Connect" },
+              { name: "Slack", desc: "Request and approve from Slack" },
+              { name: "Google Calendar", desc: "Sync approved leave" },
+              { name: "Outlook", desc: "Two-way calendar sync" },
+              { name: "Gusto", desc: "Export to payroll" },
+              { name: "Google SSO", desc: "Single sign-on" },
+              { name: "Zapier", desc: "3,000+ app integrations" },
             ].map((i) => (
-              <Card key={i.name} className="p-5 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                  <Building2 className="h-5 w-5 text-muted-foreground" />
+              <Card key={i.name} className="p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-md bg-secondary flex items-center justify-center shrink-0 text-xs font-semibold">
+                  {i.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium">{i.name}</p>
-                  <p className="text-xs text-muted-foreground">{i.desc}</p>
+                  <p className="text-sm font-medium truncate">{i.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{i.desc}</p>
                 </div>
-                <Button variant="outline" size="sm">
-                  {i.status}
+                <Button variant="outline" size="sm" className="shrink-0">
+                  Connect
                 </Button>
               </Card>
             ))}
@@ -201,25 +161,17 @@ export default function SettingsPage() {
   );
 }
 
-function PolicyCard({
-  title,
-  value,
-  description,
-}: {
-  title: string;
-  value: string;
-  description: string;
-}) {
+function PolicyCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
-    <Card className="p-5 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">{title}</p>
+    <Card className="p-4 hover:border-ring/20 transition-colors">
+      <div className="flex items-start justify-between mb-1.5">
+        <p className="text-[11px] text-muted-foreground font-medium">{title}</p>
         <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1">
           <Edit3 className="h-3 w-3" />
         </Button>
       </div>
-      <p className="font-serif text-xl mb-1">{value}</p>
-      <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+      <p className="text-base font-semibold mb-1">{value}</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
     </Card>
   );
 }

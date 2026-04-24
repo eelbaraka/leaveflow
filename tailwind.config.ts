@@ -4,12 +4,10 @@ const config: Config = {
   darkMode: ["class"],
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
-    container: { center: true, padding: "2rem", screens: { "2xl": "1400px" } },
+    container: { center: true, padding: "1rem", screens: { "2xl": "1400px" } },
     extend: {
       fontFamily: {
-        serif: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
-        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -29,6 +27,14 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -45,43 +51,11 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sage: {
-          50: "#f6f7f4",
-          100: "#e8ebe2",
-          200: "#d0d7c4",
-          300: "#aab69a",
-          400: "#849472",
-          500: "#677854",
-          600: "#515f42",
-          700: "#414c36",
-          800: "#353e2e",
-          900: "#2e3528",
-        },
-        ochre: {
-          50: "#fdf8ed",
-          100: "#faeccb",
-          200: "#f5d893",
-          300: "#efbd56",
-          400: "#eaa42f",
-          500: "#d98618",
-          600: "#bc6413",
-          700: "#9b4714",
-          800: "#7f3917",
-          900: "#692f17",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "fade-in": { "0%": { opacity: "0", transform: "translateY(4px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
-        "slide-in": { "0%": { opacity: "0", transform: "translateX(-8px)" }, "100%": { opacity: "1", transform: "translateX(0)" } },
-      },
-      animation: {
-        "fade-in": "fade-in 0.4s ease-out",
-        "slide-in": "slide-in 0.3s ease-out",
       },
     },
   },

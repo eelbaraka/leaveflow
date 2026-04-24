@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, CalendarIcon, Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { leaveTypes, leaveTypeById } from "@/lib/mock/leave-types";
 import { employees, CURRENT_USER_ID } from "@/lib/mock/employees";
 import { leaveRequests, balanceFor } from "@/lib/mock/leave-requests";
-import { countWorkingDays, fmtDate } from "@/lib/utils/dates";
+import { countWorkingDays } from "@/lib/utils/dates";
 import { parseISO } from "date-fns";
 
 export function RequestLeaveDialog({
@@ -45,18 +45,13 @@ export function RequestLeaveDialog({
   const balance = balanceFor(me.id, typeId);
   const days = startDate && endDate ? countWorkingDays(startDate, endDate, me.location) : 0;
 
-  // Conflict: who else from the team is off during this range?
   const conflicts = React.useMemo(() => {
     if (!startDate || !endDate) return [];
     const s = parseISO(startDate);
     const e = parseISO(endDate);
     return leaveRequests
       .filter((r) => r.status === "approved" && r.employeeId !== me.id)
-      .filter((r) => {
-        const rs = parseISO(r.startDate);
-        const re = parseISO(r.endDate);
-        return rs <= e && re >= s;
-      })
+      .filter((r) => parseISO(r.startDate) <= e && parseISO(r.endDate) >= s)
       .map((r) => employees.find((x) => x.id === r.employeeId)!)
       .filter((emp) => emp.team === me.team);
   }, [startDate, endDate, me.id, me.team]);
@@ -73,25 +68,24 @@ export function RequestLeaveDialog({
   }
 
   function handleSubmit() {
-    // Prototype: just show success state
     setSubmitted(true);
     setTimeout(() => {
       onOpenChange(false);
       setTimeout(reset, 300);
-    }, 1400);
+    }, 1200);
   }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setTimeout(reset, 300); onOpenChange(v); }}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
         {submitted ? (
-          <div className="py-10 flex flex-col items-center text-center gap-3 animate-fade-in">
-            <div className="w-14 h-14 rounded-full bg-sage-100 flex items-center justify-center">
-              <Check className="h-7 w-7 text-sage-700" />
+          <div className="py-8 flex flex-col items-center text-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+              <Check className="h-6 w-6 text-emerald-600" />
             </div>
-            <h3 className="font-serif text-2xl">Request submitted</h3>
+            <h3 className="text-lg font-semibold">Request submitted</h3>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Your manager will be notified. You'll see a reply within a day or two.
+              Your manager will be notified shortly.
             </p>
           </div>
         ) : (
@@ -99,11 +93,11 @@ export function RequestLeaveDialog({
             <DialogHeader>
               <DialogTitle>Request time off</DialogTitle>
               <DialogDescription>
-                Pick dates, tell us what it's for, and we'll do the rest.
+                Choose dates and leave type. Conflicts will be flagged.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="type">Leave type</Label>
                 <Select value={typeId} onValueChange={setTypeId}>
@@ -147,20 +141,15 @@ export function RequestLeaveDialog({
               </div>
 
               {days > 0 && type && (
-                <div className="rounded-md border border-border bg-muted/30 p-3 text-sm space-y-2 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground flex items-center gap-2">
-                      <CalendarIcon className="h-3.5 w-3.5" />
-                      Working days requested
-                    </span>
-                    <span className="font-medium font-mono">{days}</span>
+                <div className="rounded-md border bg-secondary/30 p-3 text-sm space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Working days</span>
+                    <span className="font-medium tabular-nums">{days}</span>
                   </div>
                   {balance && type.paid && (
-                    <div className="flex items-center justify-between">
+                    <div className="flex justify-between">
                       <span className="text-muted-foreground">Remaining after</span>
-                      <span
-                        className={`font-medium font-mono ${overAllowance ? "text-destructive" : ""}`}
-                      >
+                      <span className={`font-medium tabular-nums ${overAllowance ? "text-destructive" : ""}`}>
                         {Math.max(0, remaining - days)} / {balance.allowance}
                       </span>
                     </div>
@@ -169,25 +158,25 @@ export function RequestLeaveDialog({
               )}
 
               {overAllowance && (
-                <div className="flex gap-2.5 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-sm animate-fade-in">
+                <div className="flex gap-2.5 p-3 rounded-md bg-destructive/5 border border-destructive/20 text-sm">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
                   <div>
                     <p className="font-medium text-destructive">Exceeds allowance</p>
                     <p className="text-muted-foreground text-xs mt-0.5">
-                      You only have {remaining} days of {type?.name} left.
+                      You have {remaining} days of {type?.name} left.
                     </p>
                   </div>
                 </div>
               )}
 
               {conflicts.length > 0 && (
-                <div className="flex gap-2.5 p-3 rounded-md bg-ochre-50 border border-ochre-200 text-sm animate-fade-in">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-ochre-700 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-ochre-800">
-                      {conflicts.length} teammate{conflicts.length > 1 ? "s" : ""} already off
+                <div className="flex gap-2.5 p-3 rounded-md bg-amber-50 border border-amber-200 text-sm">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-amber-900">
+                      {conflicts.length} teammate{conflicts.length > 1 ? "s" : ""} also off
                     </p>
-                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                    <div className="flex gap-1 mt-1.5 flex-wrap">
                       {conflicts.slice(0, 4).map((c) => (
                         <Badge key={c.id} variant="outline" className="text-[10px]">
                           {c.name}
@@ -195,7 +184,7 @@ export function RequestLeaveDialog({
                       ))}
                       {conflicts.length > 4 && (
                         <Badge variant="outline" className="text-[10px]">
-                          +{conflicts.length - 4} more
+                          +{conflicts.length - 4}
                         </Badge>
                       )}
                     </div>
@@ -207,7 +196,7 @@ export function RequestLeaveDialog({
                 <Label htmlFor="reason">Note {!type?.requiresApproval && "(optional)"}</Label>
                 <Textarea
                   id="reason"
-                  placeholder="A short note for your manager…"
+                  placeholder="Add a short note for your manager..."
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
@@ -215,15 +204,16 @@ export function RequestLeaveDialog({
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="flex-row gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!startDate || !endDate || days === 0}
+                className="flex-1 sm:flex-none"
               >
-                {type?.requiresApproval ? "Submit for approval" : "Book leave"}
+                Submit request
               </Button>
             </DialogFooter>
           </>
